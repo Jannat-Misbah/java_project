@@ -237,7 +237,7 @@ public class Client extends javax.swing.JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "❌ فشل في الإضافة!");
-
+            
         }
      this.setVisible(false); 
     }//GEN-LAST:event_jButton1ActionPerformed

@@ -26,6 +26,7 @@ public class Employee extends JFrame {
         setEmployeeType();
         initUI();
         loadRequests();
+        startAutoRefresh(); // خيط التحديث التلقائي
     }
 
     private void setEmployeeType() {
@@ -69,7 +70,6 @@ public class Employee extends JFrame {
         refreshButton.setFont(new Font("Arial", Font.BOLD, 14));
         refreshButton.addActionListener(e -> refreshRequests());
 
-        // زر جديد لحفظ نسخة من الطلبات في ملف
         JButton saveButton = new JButton("حفظ نسخة");
         saveButton.setBackground(Color.decode("#6C63FF"));
         saveButton.setForeground(Color.WHITE);
@@ -138,34 +138,45 @@ public class Employee extends JFrame {
         loadRequests();
     }
 
-private void saveRequestsToFile() {
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/archives/requests_backup.txt"))) {
-
-        // كتابة العنوان
-        writer.write(String.format("%-10s%-20s%-15s%-40s%-20s", "الرقم", "اسم المستخدم", "رقم الهاتف", "الوصف", "النوع"));
-        writer.newLine();
-        writer.write("==============================================================================================");
-        writer.newLine();
-
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String formattedRow = String.format("%-10s%-20s%-15s%-40s%-20s",
-                    model.getValueAt(i, 0).toString(),  // الرقم
-                    model.getValueAt(i, 1).toString(),  // اسم المستخدم
-                    model.getValueAt(i, 2).toString(),  // رقم الهاتف
-                    model.getValueAt(i, 3).toString(),  // الوصف
-                    model.getValueAt(i, 4).toString()); // النوع
-
-            writer.write(formattedRow);
-            writer.newLine();
-        }
-
-        JOptionPane.showMessageDialog(this, "تم حفظ نسخة من الطلبات في الملف requests_backup.txt");
-
-    } catch (IOException e) {
-        JOptionPane.showMessageDialog(this, "خطأ أثناء حفظ النسخة: " + e.getMessage());
+    private void startAutoRefresh() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(10000); // كل 10 ثواني
+                    SwingUtilities.invokeLater(this::refreshRequests);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
-}
 
+    private void saveRequestsToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/archives/requests_backup.txt"))) {
+
+            writer.write(String.format("%-10s%-20s%-15s%-40s%-20s", "الرقم", "اسم المستخدم", "رقم الهاتف", "الوصف", "النوع"));
+            writer.newLine();
+            writer.write("==============================================================================================");
+            writer.newLine();
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String formattedRow = String.format("%-10s%-20s%-15s%-40s%-20s",
+                        model.getValueAt(i, 0).toString(),
+                        model.getValueAt(i, 1).toString(),
+                        model.getValueAt(i, 2).toString(),
+                        model.getValueAt(i, 3).toString(),
+                        model.getValueAt(i, 4).toString());
+
+                writer.write(formattedRow);
+                writer.newLine();
+            }
+
+            JOptionPane.showMessageDialog(this, "تم حفظ نسخة من الطلبات في الملف requests_backup.txt");
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "خطأ أثناء حفظ النسخة: " + e.getMessage());
+        }
+    }
 
     class ButtonRenderer extends JButton implements TableCellRenderer {
 
@@ -173,6 +184,7 @@ private void saveRequestsToFile() {
             setOpaque(true);
             setBackground(Color.decode("#6C63FF"));
             setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
 
         @Override
@@ -196,6 +208,7 @@ private void saveRequestsToFile() {
             button.setOpaque(true);
             button.setBackground(Color.decode("#6C63FF"));
             button.setForeground(Color.WHITE);
+            button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             button.addActionListener((ActionEvent e) -> fireEditingStopped());
         }
